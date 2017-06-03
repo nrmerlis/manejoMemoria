@@ -16,7 +16,6 @@
 
 
 
-
 Lista listaMemoriaLibre = NULL;
 pNodo p;
 
@@ -65,6 +64,7 @@ tDato creoDato(void * dato,unsigned int tamDatos);
 bool puedoAlojarDatos(void * memoria, int tamDatos);
 bool consola();
 tDato obtenerMemoria(void * memoria,int PID);
+tDato obtenerMemoriaReducida(void * memoria,int PID,int posArranque,int desplazamiento);
 
 
 int main(void)
@@ -84,9 +84,9 @@ int main(void)
     datito.tamDatos=498;
     datito.pid=15;
 
-    void * datos1=malloc(10);
+    void * datos1="Hola";
     dato.dato=datos1;
-    dato.tamDatos=10;
+    dato.tamDatos=5;
     dato.pid=3;
 
 n= obtenerPrimerNodo(listaMemoriaLibre);
@@ -151,15 +151,66 @@ printf("memoria ocupada del primer nodo despue del primer copiado: %d \n",metaDa
     }
      //,EPI.matriz[0][1],EPI.matriz[0][2]
 
-     dato=obtenerMemoria(memoria,15);
-     printf("%d \n",dato.tamDatos);
-    consola();
+     dato=obtenerMemoria(memoria,3);
+     printf("OBTENGO EL TAM PROGRAMA PARA PID 3 %d \n",dato.tamDatos);
+    printf("OBTENGO EL CONTENIDO PROGRAMA PARA PID 3 %s \n",dato.dato);
 
 }
 
 
+tDato obtenerMemoria(void * memoria,int PID){
+    int i=0;
+    void *programa;
+    metadata heap;
+    int tamPrograma=0;
+    int tamProgramaAnterior=0;
+    tDato dato;
+    for(i;i<EPI.filas;i++){
+        if (EPI.matriz[i][1]==PID){
+
+            heap = obtengoHeapMetadata(memoria,EPI.matriz[i][3]);
+
+            tamProgramaAnterior=tamPrograma;
+            tamPrograma+=heap.size;
+            programa = (void*) realloc(programa,tamPrograma*sizeof(void*)*1);
+            if(programa!='\0'){
+           memmove((void *)(programa+tamProgramaAnterior),(void *)(EPI.matriz[i][3]+sizeof(heap)),heap.size);
+
+            }
+        }
+    }
+    dato.dato=programa; // aca hay que hacer un memcpy
+    dato.tamDatos=tamPrograma;
+    return dato;
 
 
+}
+tDato obtenerMemoriaReducida(void * memoria,int PID,int posArranque,int desplazamiento){
+    int i=0;
+    void *programa;
+    metadata heap;
+
+    tDato dato;
+    for(i;i<EPI.filas;i++){
+        if (EPI.matriz[i][1]==PID){
+
+            heap = obtengoHeapMetadata(memoria,EPI.matriz[i][3]);
+
+
+
+            programa = calloc(programa,desplazamiento*sizeof(void*));
+            if(programa!='\0'){
+           memmove((void *)(programa),(void *)(EPI.matriz[i][3]+sizeof(heap)+posArranque),desplazamiento);
+
+            }
+        }
+    }
+    dato.dato=programa; // aca hay que hacer un memcpy
+    dato.tamDatos=desplazamiento;
+    return dato;
+
+
+}
 void * nuevoBloqueDeMemoria()//Inicializo memora
 {
 	void * memoria = malloc(MARCOS*MARCO_SIZE);
@@ -222,7 +273,7 @@ void * agregarDatosABloqueDeMemoria(void * memoria, tDato d)
 
             memcpy((nodo->posMemHeap)+sizeof(metaData),datos,cuantoPuedoCopiar); //Copio los datos que me llegan
 
-          int  nPagina=(((nodo->posMemHeap)+sizeof(metaData)- memoria)/512)-1;
+          int  nPagina=(((nodo->posMemHeap)+sizeof(metaData)- memoria)/512);
           if (nPagina==-1) nPagina+=1;
 
 
@@ -277,32 +328,7 @@ return memoria;
 
     }
 
-tDato obtenerMemoria(void * memoria,int PID){
-    int i=0;
-    void *programa;
-    metadata heap;
-    int tamPrograma=0;
-    int tamProgramaAnterior=0;
-    tDato dato;
-    for(i;i<EPI.filas;i++){
-        if (EPI.matriz[i][1]==PID){
 
-            heap = obtengoHeapMetadata(memoria,EPI.matriz[i][3]);
-
-            tamProgramaAnterior=tamPrograma;
-            tamPrograma+=heap.size;
-            programa = calloc(programa,tamPrograma*sizeof(void*));
-            if(programa!='\0'){
-           memmove((void *)(programa+tamProgramaAnterior),(void *)(EPI.matriz[i][3]+sizeof(heap)),heap.size);
-
-            }
-        }
-    }
-    dato.dato=programa; // aca hay que hacer un memcpy
-    dato.tamDatos=tamPrograma;
-
-    return dato;
-}
 
 
 metadata obtengoHeapMetadata(void * pagina,int posicionDeArranque){
