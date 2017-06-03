@@ -155,6 +155,12 @@ printf("memoria ocupada del primer nodo despue del primer copiado: %d \n",metaDa
      printf("OBTENGO EL TAM PROGRAMA PARA PID 3 %d \n",dato.tamDatos);
     printf("OBTENGO EL CONTENIDO PROGRAMA PARA PID 3 %s \n",dato.dato);
 
+
+    char * cadena= "2356";
+
+    int a = convertirCharAInt(cadena,4);
+
+    printf("El numero es %d \n",a);
 }
 
 
@@ -455,3 +461,16 @@ void limpiarBufferDeEntrada() {
 	while ((c = getchar()) != '\n' && c != EOF) { }
 }
 
+int convertirCharAInt(char * numero,int tamChar){
+		int i;
+		int multiplicadorBase = 1;
+		int numeroInt=0;
+		tamChar -= 1;
+		while (tamChar>=0)
+		{
+			numeroInt+= (numero[tamChar] - '0')*multiplicadorBase;
+			tamChar--;
+			multiplicadorBase*=10;
+		}
+		return numeroInt;
+	}
